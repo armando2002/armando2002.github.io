@@ -26,7 +26,8 @@ function renderResults(result) {
     const dollarPrice = `Loose price: $${price}`;
 
     const results = `<div class="results">
-        <h2 class="title"> ${result['product-name']} </h2>
+        <h2> ${result['product-name']} </h2>
+        <!-- add image to left -->
         <h3 class="system"> System: ${result['console-name']} </h3>
         <p class="price"> ${dollarPrice} </p>
     </div>`;
@@ -44,6 +45,10 @@ function displayResults(data) {
 function watchSubmit() {
     $('.js-search-form').submit(event => {
         event.preventDefault();
+
+        // remove contra placeholder and either replace with query or make blank
+
+
 		// find the value of the entry in the input box with class .js-query 
 		const queryTarget = $(event.currentTarget).find('.js-query');
 		// add query variable = text entry
