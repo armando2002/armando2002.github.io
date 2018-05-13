@@ -1,9 +1,8 @@
-//pricecharting api key and url
+// Pricecharting API Key and URL
 const VGPC_API_KEY = "d54ae2255c2fe8e39e936c398404eb52844da006";
 const VGPC_SEARCH_URL = 'https://www.pricecharting.com/api/products?';
-// YouTube API Key
+// YouTube API Key and URL
 const API_KEY = 'AIzaSyAhE7phirGx9wlS2auDO9cIcG_s0NY8ra8';
-// YouTube Search URL
 const YOUTUBE_SEARCH_URL = 'https://www.googleapis.com/youtube/v3/search';
 
 // call VGPC for prices
@@ -22,7 +21,7 @@ function getApiData(searchTerm, callback) {
         $.ajax(settings);
     }
 
-// call YouTube for thumbnail image from 1st video result
+// call YouTube for thumbnail image from 1st video result, currenty not working or used
 function getThumbnail(searchTerm, callback) {
 	const settings = {
 		url: YOUTUBE_SEARCH_URL,
@@ -39,26 +38,23 @@ function getThumbnail(searchTerm, callback) {
 	$.ajax(settings);
 }
 
-// grab an image with the jsob blurb for each item and somehow store an image an array that matches the json index with
-
-
-
 // create a div element containing the game information
-// add in the image for the game from the google api function
-
-
 function renderResults(result) {
     // variable for parsed price
-    console.log(result);
     const price = parseFloat(result['loose-price'] / 100).toFixed(2);
     const dollarPrice = `Loose price: $${price}`;
-
-    // add in image here to div element
+    // URL encodings for shop links
     var fixedName = encodeURIComponent(result['product-name']);
     var fixedConsole = encodeURIComponent(result[`console-name`]);
-    const results = `<div class="results">
+
+    // add variable for each particular result
+    // $("#id").children('.price')
+    // added result ID below and make it dynamic for each item
+
+    const results = `<div id="resultId" class="results">
         <h2> ${result['product-name']} </h2>
-        <!-- add image to left -->
+        <img class="thumbnail" src="coin.png">
+        <!-- later on, update the image using the YouTube thumbnail -->
         <h3 class="system"> System: ${result['console-name']} </h3>
         <p class="price"> ${dollarPrice} </p>
         <h4>Shop Now:</h4>
@@ -68,21 +64,23 @@ function renderResults(result) {
     return results;
     }
 
+// add total results to page by counting total # of items in JSON response
+
+
 // function to add each HTML Div to page using .html
 function displayResults(data) {
     const results = data.products.map((item, index) => renderResults(item));
-    // debug to see results
-    console.log(results);
     $('.js-main').html(results);
+
+
+    // data.products.forEach
+    // getYoutubedata(id)
+    // then update the dom for each element, find it select it and use .html to append thumbnail image
 }
 
 function watchSubmit() {
     $('.js-search-form').submit(event => {
         event.preventDefault();
-
-        // remove contra placeholder and either replace with query or make blank
-
-
 		// find the value of the entry in the input box with class .js-query 
 		const queryTarget = $(event.currentTarget).find('.js-query');
 		// add query variable = text entry
@@ -99,11 +97,13 @@ $(watchSubmit);
 
 
 
-    // TO DO
+        // TO DO
 
         // need to think about way to pair price and image API requests if it is needed - TBD, IDs do not match between APIs and no API has prices except VGPC
+        // add total results to top of page
+        // add a max # of items per page and prev and next page buttons
 
         // NICE TO HAVE
 
         // think of a way to create a dynamic dropdown to filter console based on query,
-        // maybe using a GET request to populate an array based on console in the JSON response?
+        // maybe using a GET request to populate an array based on console in the JSON response

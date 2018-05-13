@@ -31,6 +31,12 @@ main {
     padding: 2px;
 }
 
+.thumbnail {
+    max-width: 25%;
+    max-height: 25%;
+    display: none;
+}
+
 a {
     color: #D7E8FA;
 }
