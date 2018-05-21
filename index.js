@@ -1,9 +1,9 @@
-// Pricecharting API Key and URL
-const VGPC_API_KEY = "d54ae2255c2fe8e39e936c398404eb52844da006";
+// Pricecharting URL
 const VGPC_SEARCH_URL = 'https://www.pricecharting.com/api/products?';
-// YouTube API Key and URL
-const API_KEY = 'AIzaSyAhE7phirGx9wlS2auDO9cIcG_s0NY8ra8';
+var vgpcapikey = config.VGPC_API_KEY;
+// YouTube URL
 const YOUTUBE_SEARCH_URL = 'https://www.googleapis.com/youtube/v3/search';
+var youtubeapikey = config.API_KEY;
 
 // call VGPC for prices
 function getApiData(searchTerm, callback) {
@@ -11,7 +11,7 @@ function getApiData(searchTerm, callback) {
         url: VGPC_SEARCH_URL,
         data: {
             q: `${searchTerm}`,
-            t: VGPC_API_KEY
+            t: vgpcapikey
         },
         dataType: 'json',
         type: 'GET',
@@ -21,14 +21,15 @@ function getApiData(searchTerm, callback) {
         $.ajax(settings);
     }
 
-// call YouTube for thumbnail image from 1st video result, currenty not working or used
+// call YouTube for thumbnail image from 1st video result
+// currenty not working or used
 function getThumbnail(searchTerm, callback) {
 	const settings = {
 		url: YOUTUBE_SEARCH_URL,
 		data: {
 			q: `${searchTerm}`,
 			part: 'snippet',
-			key: API_KEY
+			key: youtubeapikey
 		},
 		dataType: 'json',
 		type: 'GET',
@@ -38,50 +39,59 @@ function getThumbnail(searchTerm, callback) {
 	$.ajax(settings);
 }
 
+// function to deal with RFC3896 (force URL encoding of /[!'()*])
+function rfc3986EncodeURIComponent (str) {  
+    return encodeURIComponent(str).replace(/[!'()*]/g, escape);  
+}
+
 // create a div element containing the game information
 function renderResults(result) {
     // variable for parsed price
     const price = parseFloat(result['loose-price'] / 100).toFixed(2);
     const dollarPrice = `Loose price: $${price}`;
     // URL encodings for shop links
-    var fixedName = encodeURIComponent(result['product-name']);
-    var fixedConsole = encodeURIComponent(result[`console-name`]);
-
-    // add variable for each particular result
-    // $("#id").children('.price')
-    // added result ID below and make it dynamic for each item
-
-    const results = `<div id="resultId" class="results">
+    // create URL encoded variables
+    var fixedName = rfc3986EncodeURIComponent(result['product-name']);
+    var fixedConsole = rfc3986EncodeURIComponent(result[`console-name`]);
+    // prep results HTML
+    const results = `<div class="results">
         <h2> ${result['product-name']} </h2>
         <img class="thumbnail" src="coin.png">
         <!-- later on, update the image using the YouTube thumbnail -->
         <h3 class="system"> System: ${result['console-name']} </h3>
         <p class="price"> ${dollarPrice} </p>
         <h4>Shop Now:</h4>
-        <button class="btn btn-block" onclick="window.open('https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=`+fixedName+`%20`+fixedConsole+`')"><i class="fab fa-amazon fa-2x"></i></button>
-        <button class="btn btn-block" onclick="window.open('https://www.ebay.com/sch/i.html?_nkw=`+fixedName+`%20`+fixedConsole+`&ssPageName=GSTL')"><i class="fab fa-ebay fa-2x"></i></button>        
+        <button class="btn btn-block" aria-label="Shop on Amazon" onclick="window.open('https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=`+fixedName+`%20`+fixedConsole+`')"><i class="fab fa-amazon fa-2x"></i></button>
+        <button class="btn btn-block" aria-label="Shop on eBay" onclick="window.open('https://www.ebay.com/sch/i.html?_nkw=`+fixedName+`%20`+fixedConsole+`&ssPageName=GSTL')"><i class="fab fa-ebay fa-2x"></i></button>        
     </div>`;
     return results;
     }
 
-// add total results to page by counting total # of items in JSON response
-
-
 // function to add each HTML Div to page using .html
 function displayResults(data) {
     const results = data.products.map((item, index) => renderResults(item));
-    $('.js-main').html(results);
-
-
-    // data.products.forEach
-    // getYoutubedata(id)
-    // then update the dom for each element, find it select it and use .html to append thumbnail image
+    // count total results and add to page
+    const totalResults = Object.keys(results).length;
+    const totalResultsHTML = `<h4> Total Results: ${totalResults} </h4>`;
+    // if results are 0, warn user, else push total and results
+    if(totalResults==0) {
+        alert("No results, try again!");
+    }
+    else{
+    // remove hidden attribute for aria-live    
+    // push results and total
+    $('.js-results').prop('hidden', false).html(totalResultsHTML);
+    $('.js-main').prop('hidden', false).html(results);
+    }
 }
 
 function watchSubmit() {
     $('.js-search-form').submit(event => {
         event.preventDefault();
-		// find the value of the entry in the input box with class .js-query 
+        // clear out existing total results and results if a search was already done and rehide for aria-live
+        $('.js-results').prop('hidden', false).html("");
+        $('.js-main').prop('hidden', false).html("");
+		// find the value of the entry in the input box with class .js-query
 		const queryTarget = $(event.currentTarget).find('.js-query');
 		// add query variable = text entry
 		const query = queryTarget.val();
@@ -94,16 +104,3 @@ function watchSubmit() {
 }
 
 $(watchSubmit);
-
-
-
-        // TO DO
-
-        // need to think about way to pair price and image API requests if it is needed - TBD, IDs do not match between APIs and no API has prices except VGPC
-        // add total results to top of page
-        // add a max # of items per page and prev and next page buttons
-
-        // NICE TO HAVE
-
-        // think of a way to create a dynamic dropdown to filter console based on query,
-        // maybe using a GET request to populate an array based on console in the JSON response
